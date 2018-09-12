@@ -50,6 +50,8 @@ class ViewController: UIViewController {
         }
     }
     
+    .gitignore
+    .gitignore
     var emojiChoices = ["👻","🎒","🧢","☠️", "🎩", "🐌", "🌚", "🥐"]
     var emoji = [Int:String]()
     
