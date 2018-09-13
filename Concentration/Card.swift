@@ -12,6 +12,7 @@ struct Card {
     var isFaceUp = false
     var isMatched = false
     var identifier: Int
+    var lastTouchTimeStamp = Date()
     
     static var identifierFactory = 0
     
