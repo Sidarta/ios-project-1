@@ -8,19 +8,46 @@
 
 import Foundation
 
-class Concentration {
-    var arrayOfCards = [Card]()
+struct Concentration {
+    private(set) var arrayOfCards = [Card]()
     
-    var indexOfOneAndOnlyFaceUpCard: Int?
+    private var indexOfOneAndOnlyFaceUpCard: Int? {
+        get {
+            
+            return arrayOfCards.indices.filter { arrayOfCards[$0].isFaceUp }.oneAndOnly //using closure and protocol extension
+//            return faceUpCardIndices.count == 1 ? faceUpCardIndices.first : nil
+            
+//            var foundIndex: Int?
+//            for index in arrayOfCards.indices {
+//                if(arrayOfCards[index].isFaceUp) {
+//                    if(foundIndex == nil){
+//                        foundIndex = index
+//                    } else {
+//                        return nil
+//                    }
+//                }
+//            }
+//
+//            return foundIndex
+        }
+        set {
+            for index in arrayOfCards.indices {
+                arrayOfCards[index].isFaceUp = (index == newValue)
+            }
+        }
+    }
     
     var flipCount = 0
     
     var score = 0.0
     
     //no need to store the entire card here, since each card is ID'd by an index
-    var alreadyRevealedCardIndexes = [Int]()
+    private var alreadyRevealedCardIndexes = [Int]()
     
-    func chooseCard(at index:Int){
+    mutating func chooseCard(at index:Int){
+        
+        assert(arrayOfCards.indices.contains(index), "Concentration.chooseCard(at: \(index)): chosen card was not in the cards")
+        
         if !arrayOfCards[index].isMatched {
             
             //correcting flip count to not increase on a card already face up
@@ -35,7 +62,7 @@ class Concentration {
                 
                 let timePenalty = arrayOfCards[index].lastTouchTimeStamp.timeIntervalSince(arrayOfCards[otherCardIndex].lastTouchTimeStamp)
                 
-                if arrayOfCards[otherCardIndex].identifier == arrayOfCards[index].identifier {
+                if arrayOfCards[otherCardIndex] == arrayOfCards[index] {
                     //cards matched
                     arrayOfCards[otherCardIndex].isMatched = true
                     arrayOfCards[index].isMatched = true
@@ -59,24 +86,20 @@ class Concentration {
                     
                 }
                 arrayOfCards[index].isFaceUp = true
-                indexOfOneAndOnlyFaceUpCard = nil
             } else {
                 //tapping when no cards are up or two cards are up
-                for flipDownIndex in arrayOfCards.indices {
-                    arrayOfCards[flipDownIndex].isFaceUp = false
-                }
-                arrayOfCards[index].isFaceUp = true
                 indexOfOneAndOnlyFaceUpCard = index
             }
         }
     }
     
     init(numberOfPairsOfCards: Int){
+        assert(numberOfPairsOfCards > 0, "Concentration.init(\(numberOfPairsOfCards)): negative number of cards")
         addCards(numberOfPairsOfCards : numberOfPairsOfCards)
     }
     
     //did this in case new game was inside the model
-    private func addCards(numberOfPairsOfCards: Int){
+    private mutating func addCards(numberOfPairsOfCards: Int){
         for _ in 0..<numberOfPairsOfCards {
             let card = Card()
             arrayOfCards += [card, card] //because its value not reference (copyes)
@@ -92,5 +115,11 @@ class Concentration {
         }
         arrayOfCards = shuffledArray
         
+    }
+}
+
+extension Collection {
+    var oneAndOnly: Element? {
+        return count == 1 ? first : nil
     }
 }

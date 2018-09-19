@@ -10,9 +10,18 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    lazy var game = Concentration(numberOfPairsOfCards: (cardButtonsArray.count + 1) / 2)
+    private lazy var game = Concentration(numberOfPairsOfCards: numberOfPairsOfCards)
     
-    @IBOutlet weak var flipCountLabel: UILabel!
+    var numberOfPairsOfCards: Int {
+        return (cardButtonsArray.count + 1) / 2
+    }
+    
+    @IBOutlet weak var flipCountLabel: UILabel! {
+        didSet {
+            updateFlipCount()
+        }
+    }
+    
     @IBOutlet var cardButtonsArray: [UIButton]!
     @IBOutlet weak var scoreLabel: UILabel!
     
@@ -43,7 +52,7 @@ class ViewController: UIViewController {
     
     //define emoji choices to be one of the random themes
     private func defineRandomTheme(){
-        randomThemeIndex = Int(arc4random_uniform(UInt32(emojiThemes.count)))
+        randomThemeIndex = emojiThemes.count.arc4random
         emojiChoices = emojiThemes[randomThemeIndex]
         
         //defining card backgrounds
@@ -63,34 +72,42 @@ class ViewController: UIViewController {
         }
     }
     
-    func updateViewFromModel() {
+    private func updateViewFromModel() {
         for index in cardButtonsArray.indices {
             let card = game.arrayOfCards[index]
             let button = cardButtonsArray[index]
             if card.isFaceUp {
                 //flip front
-                button.setTitle(emoji(for: card), for: UIControlState.normal)
+                button.setTitle(emoji(for: card), for: UIControl.State.normal)
                 button.backgroundColor = #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)
             } else {
                 //flip back
-                button.setTitle("", for: UIControlState.normal)
+                button.setTitle("", for: UIControl.State.normal)
                 button.backgroundColor = card.isMatched ? #colorLiteral(red: 1, green: 1, blue: 1, alpha: 0) : cardBackgroundColorForThemes[randomThemeIndex]
             }
         }
-        
-        flipCountLabel.text = "Flip count: \(game.flipCount)"
+        updateFlipCount()
         scoreLabel.text = "Score: \(game.score.rounded())"
     }
     
-    var emoji = [Int:String]()
+    private func updateFlipCount(){
+        let attributes: [NSAttributedString.Key:Any] = [
+            .strokeWidth : 5.0,
+            .strokeColor : UIColor.black
+        ]
+        let attributedString = NSAttributedString(string: "Flip count: \(game.flipCount)", attributes: attributes)
+        flipCountLabel.attributedText = attributedString
+    }
+    
+    var emoji = [Card:String]()
     
     func emoji(for card: Card) -> String {
-        if emoji[card.identifier] == nil, emojiChoices.count > 0 {
-            let randomIndex = Int(arc4random_uniform(UInt32(emojiChoices.count)))
-            emoji[card.identifier] = emojiChoices.remove(at: randomIndex)
+        if emoji[card] == nil, emojiChoices.count > 0 {
+            let randomIndex = emojiChoices.count.arc4random
+            emoji[card] = emojiChoices.remove(at: randomIndex)
         }
         
-        return emoji[card.identifier] ?? "?"
+        return emoji[card] ?? "?"
     }
     
     
@@ -106,3 +123,14 @@ class ViewController: UIViewController {
     }
 }
 
+extension Int {
+    var arc4random: Int {
+        if(self > 0){
+            return Int(arc4random_uniform(UInt32(self)))
+        } else if (self < 0){
+            return -Int(arc4random_uniform(UInt32(abs(self))))
+        } else {
+            return 0
+        }
+    }
+}
